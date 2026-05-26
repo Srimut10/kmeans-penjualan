@@ -711,10 +711,22 @@ elif menu == "Pengaturan":
 
         # Daftar akun yang ada
         st.write("Daftar Akun Terdaftar:")
-        users = auth_manager.load_users()
-        user_list = [{"Username": u, "Nama": d["name"], "Dibuat": d.get("created_at", "-")[:10]}
-                     for u, d in users.items()]
-        st.dataframe(user_list, use_container_width=True, hide_index=True)
+        try:
+            import requests as _req
+            res = _req.get(
+                "https://xaudrzfhhssvliozsxbo.supabase.co/rest/v1/users",
+                headers={
+                    "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhdWRyemZoaHNzdmxpb3pzeGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NTU0OTQsImV4cCI6MjA5NTMzMTQ5NH0.vyeu-_zq9Ue9SpRHfqMR491508T6a1e54LFjpcoQdik",
+                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhdWRyemZoaHNzdmxpb3pzeGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NTU0OTQsImV4cCI6MjA5NTMzMTQ5NH0.vyeu-_zq9Ue9SpRHfqMR491508T6a1e54LFjpcoQdik"
+                },
+                params={"select": "username,name,created_at"}
+            )
+            users_data = res.json()
+            user_list = [{"Username": u["username"], "Nama": u["name"], "Dibuat": str(u.get("created_at", "-"))[:10]}
+                         for u in users_data]
+            st.dataframe(user_list, use_container_width=True, hide_index=True)
+        except Exception as e:
+            st.error(f"Gagal memuat daftar akun: {e}")
 
     st.stop()
 
