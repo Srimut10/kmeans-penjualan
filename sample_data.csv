@@ -1,0 +1,50 @@
+Product,Quantity,Price,Total_Sales,Category
+Laptop,15,8500000,127500000,Electronics
+Mouse,45,150000,6750000,Electronics
+Keyboard,30,350000,10500000,Electronics
+Monitor,20,2500000,50000000,Electronics
+Headset,35,450000,15750000,Electronics
+Webcam,25,750000,18750000,Electronics
+Speaker,40,550000,22000000,Electronics
+Printer,12,3500000,42000000,Electronics
+Scanner,8,2800000,22400000,Electronics
+Router,28,850000,23800000,Electronics
+Smartphone,50,4500000,225000000,Electronics
+Tablet,22,3200000,70400000,Electronics
+Smartwatch,18,2100000,37800000,Electronics
+Earbuds,60,350000,21000000,Electronics
+Charger,80,125000,10000000,Electronics
+Cable,100,45000,4500000,Electronics
+Powerbank,35,275000,9625000,Electronics
+Memory Card,55,185000,10175000,Electronics
+USB Drive,70,95000,6650000,Electronics
+Hard Drive,15,1850000,27750000,Electronics
+SSD,18,2250000,40500000,Electronics
+RAM,25,950000,23750000,Electronics
+Processor,10,5500000,55000000,Electronics
+Motherboard,8,3800000,30400000,Electronics
+Graphics Card,12,8500000,102000000,Electronics
+Cooling Fan,30,285000,8550000,Electronics
+Power Supply,20,1250000,25000000,Electronics
+Case,15,850000,12750000,Electronics
+Desk Lamp,40,185000,7400000,Furniture
+Office Chair,25,1850000,46250000,Furniture
+Desk,18,2500000,45000000,Furniture
+Bookshelf,12,1250000,15000000,Furniture
+Filing Cabinet,10,1850000,18500000,Furniture
+Whiteboard,15,650000,9750000,Furniture
+Notebook,150,25000,3750000,Stationery
+Pen,200,5000,1000000,Stationery
+Pencil,180,3500,630000,Stationery
+Eraser,120,2500,300000,Stationery
+Ruler,90,8500,765000,Stationery
+Stapler,45,35000,1575000,Stationery
+Paper,100,55000,5500000,Stationery
+Folder,85,12000,1020000,Stationery
+Binder,60,28000,1680000,Stationery
+Marker,95,15000,1425000,Stationery
+Highlighter,110,12000,1320000,Stationery
+Scissors,50,22000,1100000,Stationery
+Tape,75,8500,637500,Stationery
+Glue,65,6500,422500,Stationery
+Calculator,35,125000,4375000,Electronics
