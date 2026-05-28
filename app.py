@@ -1043,11 +1043,11 @@ if uploaded_file is not None:
                 with col2:
                     st.metric("Silhouette Score", f"{silhouette:.3f}")
                 with col3:
-                    st.metric("Total Customer Dianalisis", len(df_agg))
+                    st.metric("Total Produk Dianalisis", len(df_agg))
 
                 # Grafik segmentasi
-                st.subheader("Grafik Segmentasi Pelanggan")
-                st.caption(f"Sumbu X = Frekuensi belanja customer | Sumbu Y = Total uang dihabiskan dari kolom '{sales_col}'")
+                st.subheader("Grafik Segmentasi Produk")
+                st.caption(f"Sumbu X = Frekuensi penjualan produk | Sumbu Y = Total pendapatan dari kolom '{sales_col}'")
                 seg_colors = {
                     'Sultan / Loyal': '#e74c3c',
                     'Hemat': '#2ecc71',
@@ -1060,13 +1060,13 @@ if uploaded_file is not None:
                         continue
                     # Titik data individual - jelas dan solid
                     ax.scatter(subset['Frekuensi'], subset['Total_Belanja'],
-                               label=f"{seg} ({len(subset)} customer)",
+                               label=f"{seg} ({len(subset)} produk)",
                                color=color, alpha=1.0, s=200,
                                edgecolors='black', linewidth=1.5,
                                marker='o', zorder=5)
-                    # Label nama customer
+                    # Label nama produk
                     for _, row in subset.iterrows():
-                        ax.annotate(str(row[customer_col])[:12],
+                        ax.annotate(str(row[product_col])[:12],
                                     (row['Frekuensi'], row['Total_Belanja']),
                                     textcoords='offset points', xytext=(6, 6),
                                     fontsize=8, fontweight='bold', alpha=1.0)
@@ -1075,9 +1075,9 @@ if uploaded_file is not None:
                                color=color, s=800, edgecolors='black', linewidth=3,
                                zorder=10, marker='o', alpha=1.0)
 
-                ax.set_xlabel('Frekuensi Belanja (Jumlah Transaksi)', fontsize=13, fontweight='bold')
-                ax.set_ylabel(f'Total Uang Dihabiskan ({sales_col})', fontsize=13, fontweight='bold')
-                ax.set_title('Segmentasi Pelanggan: Loyalitas vs Total Belanja', fontsize=15, fontweight='bold')
+                ax.set_xlabel('Frekuensi Penjualan (Jumlah Transaksi)', fontsize=13, fontweight='bold')
+                ax.set_ylabel(f'Total Pendapatan ({sales_col})', fontsize=13, fontweight='bold')
+                ax.set_title('Segmentasi Produk: Frekuensi vs Total Pendapatan', fontsize=15, fontweight='bold')
                 ax.legend(loc='upper left', fontsize=11, framealpha=0.95)
                 ax.grid(True, alpha=0.3, linestyle='--')
                 ax.set_facecolor('#f8f9fa')
@@ -1104,74 +1104,30 @@ if uploaded_file is not None:
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     n_sultan = len(df_agg[df_agg['Segmen'] == 'Sultan / Loyal'])
-                    st.metric("Sultan / Loyal", f"{n_sultan} customer")
-                    st.caption("Sering belanja + belanja besar")
+                    st.metric("Sultan / Loyal", f"{n_sultan} produk")
+                    st.caption("Sering terjual + pendapatan besar")
                 with col2:
                     n_hemat = len(df_agg[df_agg['Segmen'] == 'Hemat'])
-                    st.metric("Hemat", f"{n_hemat} customer")
-                    st.caption("Sering belanja + belanja kecil")
+                    st.metric("Hemat", f"{n_hemat} produk")
+                    st.caption("Sering terjual + pendapatan kecil")
                 with col3:
                     n_pasif = len(df_agg[df_agg['Segmen'] == 'Baru / Pasif'])
-                    st.metric("Baru / Pasif", f"{n_pasif} customer")
-                    st.caption("Jarang belanja + belanja kecil")
+                    st.metric("Baru / Pasif", f"{n_pasif} produk")
+                    st.caption("Jarang terjual + pendapatan kecil")
 
-                # Tabel hasil per customer - diurutkan dari paling loyal
-                st.subheader("Daftar Customer per Segmen")
+                # Tabel hasil per produk - diurutkan dari paling laris
+                st.subheader("Daftar Produk per Segmen")
 
-                # Gabungkan dengan data asli untuk dapat nama barang
-                df_customer_detail = df_seg.groupby(customer_col, as_index=False).agg(
-                    Frekuensi=(sales_col, 'count'),
-                    Total_Belanja=(sales_col, 'sum')
-                )
-
-                # Ambil daftar nama barang per customer
-                if product_col in df_seg.columns and product_col != customer_col:
-                    barang_per_customer = (
-                        df_seg.groupby(customer_col, as_index=False)[product_col]
-                        .apply(lambda x: ', '.join(x.dropna().astype(str).unique()[:5]))
-                        .rename(columns={product_col: 'Nama Barang'})
-                        if False else
-                        df_seg.groupby(customer_col)[product_col]
-                        .apply(lambda x: ', '.join(x.dropna().astype(str).unique()[:5]))
-                        .reset_index(name='Nama Barang')
-                    )
-                    df_customer_detail = df_customer_detail.merge(barang_per_customer, on=customer_col, how='left')
-
-                # Gabungkan dengan segmen
-                df_customer_detail = df_customer_detail.merge(
-                    df_agg[[customer_col, 'Segmen']], on=customer_col, how='left'
-                )
-                # Urutkan: Sultan di atas, lalu Hemat, lalu Baru/Pasif
+                df_prod_detail = df_agg[[product_col, 'Frekuensi', 'Total_Belanja', 'Segmen']].copy()
                 segmen_order = {'Sultan / Loyal': 0, 'Hemat': 1, 'Baru / Pasif': 2}
-                df_customer_detail['_sort'] = df_customer_detail['Segmen'].map(segmen_order).fillna(3)
-                df_customer_detail = df_customer_detail.sort_values(['_sort', 'Total_Belanja'], ascending=[True, False])
-                df_customer_detail = df_customer_detail.drop(columns=['_sort'])
-                df_customer_detail['Total_Belanja_Fmt'] = df_customer_detail['Total_Belanja'].apply(
+                df_prod_detail['_sort'] = df_prod_detail['Segmen'].map(segmen_order).fillna(3)
+                df_prod_detail = df_prod_detail.sort_values(['_sort', 'Total_Belanja'], ascending=[True, False])
+                df_prod_detail = df_prod_detail.drop(columns=['_sort'])
+                df_prod_detail['Total_Belanja_Fmt'] = df_prod_detail['Total_Belanja'].apply(
                     lambda x: f"{x:,.0f}".replace(',', '.')
                 )
-
-                cols_show = [customer_col]
-                if 'Nama Barang' in df_customer_detail.columns:
-                    cols_show.append('Nama Barang')
-                cols_show += ['Frekuensi', 'Total_Belanja_Fmt', 'Segmen']
-
-                df_show = df_customer_detail[cols_show].copy()
-                rename_map = {
-                    customer_col: 'Customer',
-                    'Frekuensi': 'Frekuensi Belanja',
-                    'Total_Belanja_Fmt': f'Total {sales_col}',
-                    'Segmen': 'Segmen'
-                }
-                df_show = df_show.rename(columns=rename_map)
-                # Pastikan header kolom total tidak pakai nama kolom sales_col mentah
-                df_show.columns = [
-                    'Customer' if c == customer_col else
-                    'Nama Barang' if c == 'Nama Barang' else
-                    'Frekuensi Belanja' if c == 'Frekuensi' else
-                    'Total Belanja' if 'Total' in c else
-                    c
-                    for c in df_show.columns
-                ]
+                df_show = df_prod_detail[[product_col, 'Frekuensi', 'Total_Belanja_Fmt', 'Segmen']].copy()
+                df_show.columns = ['Nama Produk', 'Frekuensi Terjual', f'Total {sales_col}', 'Segmen']
                 st.dataframe(df_show, use_container_width=True, hide_index=True)
 
                 # Auto-save ke history
@@ -1211,7 +1167,7 @@ if uploaded_file is not None:
                     mime='text/csv'
                 )
         else:
-            st.warning("Pilih kolom customer dan kolom harga/nilai transaksi yang valid di sidebar.")
+            st.warning("Pilih kolom produk dan kolom harga/nilai transaksi yang valid di sidebar.")
 
         st.markdown("---")
 
