@@ -415,13 +415,13 @@ def plot_top_products(df, product_col, sales_col, top_n=10):
         
         # Tambahkan label jumlah di atas bar
         for i, (idx, val) in enumerate(top_products.items()):
-            ax.text(i, val, f'{int(val)} item', ha='center', va='bottom', fontsize=9, fontweight='bold')
+            ax.text(i, val, f'{int(val)} produk', ha='center', va='bottom', fontsize=9, fontweight='bold')
         
         ax.set_xticks(range(len(top_products)))
         ax.set_xticklabels(top_products.index, rotation=45, ha='right')
         ax.set_title(f'Top {len(top_products)} Produk Terlaris', fontsize=14, fontweight='bold')
         ax.set_xlabel('Produk', fontsize=12)
-        ax.set_ylabel('Jumlah Item Terjual', fontsize=12)
+        ax.set_ylabel('Jumlah Produk Terjual', fontsize=12)
         ax.grid(axis='y', alpha=0.3, linestyle='--')
         plt.tight_layout()
         return fig
@@ -929,7 +929,23 @@ if uploaded_file is not None:
         # ============================================================
 
         # Tampilkan Data CSV
-        st.header("Data Penjualan")
+        # Auto-detect tahun dari kolom tanggal
+        tahun_dataset = ""
+        for col in df_cleaned.columns:
+            if any(k in col.lower() for k in ['tanggal', 'date', 'waktu', 'time', 'created', 'order']):
+                try:
+                    tgl = pd.to_datetime(df_cleaned[col], errors='coerce')
+                    tahun_list = sorted(tgl.dt.year.dropna().unique().astype(int))
+                    if tahun_list:
+                        if len(tahun_list) == 1:
+                            tahun_dataset = f" {tahun_list[0]}"
+                        else:
+                            tahun_dataset = f" {tahun_list[0]}-{tahun_list[-1]}"
+                        break
+                except:
+                    pass
+
+        st.header(f"Data Penjualan{tahun_dataset}")
         st.write(f"Menampilkan **{len(df_cleaned):,}** baris data")
         rows_to_show = st.slider("Jumlah baris yang ditampilkan", 10, len(df_cleaned), min(100, len(df_cleaned)))
         st.dataframe(df_cleaned.head(rows_to_show), use_container_width=True, hide_index=True)
@@ -964,22 +980,22 @@ if uploaded_file is not None:
                 st.caption(f"({avg_sales:.0f} rupiah per transaksi)")
 
         st.markdown("---")
-        st.header("Segmentasi Pelanggan K-Means")
+        st.header("Segmentasi Produk K-Means")
 
-        if customer_col and sales_col and customer_col in df_cleaned.columns and sales_col in df_cleaned.columns:
+        if product_col and sales_col and product_col in df_cleaned.columns and sales_col in df_cleaned.columns:
 
             df_seg = df_cleaned.copy()
             df_seg[sales_col] = pd.to_numeric(df_seg[sales_col], errors='coerce')
-            df_seg = df_seg.dropna(subset=[customer_col, sales_col])
+            df_seg = df_seg.dropna(subset=[product_col, sales_col])
 
-            # Agregasi per CUSTOMER: frekuensi = jumlah transaksi, total belanja = sum nilai
-            df_agg = df_seg.groupby(customer_col).agg(
+            # Agregasi per PRODUK: frekuensi = jumlah transaksi, total belanja = sum nilai
+            df_agg = df_seg.groupby(product_col).agg(
                 Frekuensi=(sales_col, 'count'),
                 Total_Belanja=(sales_col, 'sum')
             ).reset_index()
 
             if len(df_agg) < n_clusters:
-                st.warning(f"Jumlah customer unik ({len(df_agg)}) lebih sedikit dari jumlah cluster ({n_clusters}). Kurangi jumlah cluster di sidebar.")
+                st.warning(f"Jumlah produk unik ({len(df_agg)}) lebih sedikit dari jumlah cluster ({n_clusters}). Kurangi jumlah cluster di sidebar.")
             else:
                 X = df_agg[['Frekuensi', 'Total_Belanja']].values
                 scaler_seg = StandardScaler()
