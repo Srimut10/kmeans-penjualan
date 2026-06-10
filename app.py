@@ -1005,35 +1005,19 @@ if uploaded_file is not None:
                 raw_clusters = kmeans_seg.fit_predict(X_scaled)
                 silhouette = silhouette_score(X_scaled, raw_clusters) if n_clusters > 1 else 0.0
 
-                df_agg['_cluster_raw'] = raw_clusters
+                df_agg['Cluster'] = raw_clusters
 
-                # Label berdasarkan ranking centroid (dijamin label berbeda tiap cluster)
-                centroids_orig = scaler_seg.inverse_transform(kmeans_seg.cluster_centers_)
-                freq_ranks = centroids_orig[:, 0].argsort().argsort()
-                sales_ranks = centroids_orig[:, 1].argsort().argsort()
-                combined_scores = freq_ranks + sales_ranks
-                sorted_clusters = np.argsort(combined_scores)[::-1]
+                # Label berdasarkan NILAI TOTAL BELANJA (bukan ranking K-Means)
+                # Sultan >= 20 juta, Hemat 5-20 juta, Baru/Pasif < 5 juta
+                def assign_label(total):
+                    if total >= 20_000_000:
+                        return 'Sultan / Loyal'
+                    elif total >= 5_000_000:
+                        return 'Hemat'
+                    else:
+                        return 'Baru / Pasif'
 
-                label_map = {}
-                labels_ordered = ['Sultan / Loyal', 'Hemat', 'Baru / Pasif']
-                if n_clusters == 3:
-                    for rank, cluster_id in enumerate(sorted_clusters):
-                        label_map[cluster_id] = labels_ordered[rank]
-                elif n_clusters == 2:
-                    label_map[sorted_clusters[0]] = 'Sultan / Loyal'
-                    label_map[sorted_clusters[1]] = 'Baru / Pasif'
-                else:
-                    for rank, cluster_id in enumerate(sorted_clusters):
-                        if rank == 0:
-                            label_map[cluster_id] = 'Sultan / Loyal'
-                        elif rank == len(sorted_clusters) - 1:
-                            label_map[cluster_id] = 'Baru / Pasif'
-                        else:
-                            label_map[cluster_id] = 'Hemat'
-
-                df_agg['Segmen'] = df_agg['_cluster_raw'].map(label_map)
-                df_agg['Cluster'] = df_agg['_cluster_raw']
-                df_agg = df_agg.drop(columns=['_cluster_raw'])
+                df_agg['Segmen'] = df_agg['Total_Belanja'].apply(assign_label)
 
                 # Metrik
                 st.subheader("Metrik Clustering")
