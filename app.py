@@ -980,22 +980,22 @@ if uploaded_file is not None:
                 st.caption(f"({avg_sales:.0f} rupiah per transaksi)")
 
         st.markdown("---")
-        st.header("Segmentasi Produk K-Means")
+        st.header("Segmentasi Pelanggan K-Means")
 
-        if product_col and sales_col and product_col in df_cleaned.columns and sales_col in df_cleaned.columns:
+        if customer_col and sales_col and customer_col in df_cleaned.columns and sales_col in df_cleaned.columns:
 
             df_seg = df_cleaned.copy()
             df_seg[sales_col] = pd.to_numeric(df_seg[sales_col], errors='coerce')
-            df_seg = df_seg.dropna(subset=[product_col, sales_col])
+            df_seg = df_seg.dropna(subset=[customer_col, sales_col])
 
-            # Agregasi per PRODUK: frekuensi = jumlah transaksi, total belanja = sum nilai
-            df_agg = df_seg.groupby(product_col).agg(
+            # Agregasi per CUSTOMER
+            df_agg = df_seg.groupby(customer_col).agg(
                 Frekuensi=(sales_col, 'count'),
                 Total_Belanja=(sales_col, 'sum')
             ).reset_index()
 
             if len(df_agg) < n_clusters:
-                st.warning(f"Jumlah produk unik ({len(df_agg)}) lebih sedikit dari jumlah cluster ({n_clusters}). Kurangi jumlah cluster di sidebar.")
+                st.warning(f"Jumlah customer unik ({len(df_agg)}) lebih sedikit dari jumlah cluster ({n_clusters}). Kurangi jumlah cluster di sidebar.")
             else:
                 X = df_agg[['Frekuensi', 'Total_Belanja']].values
                 scaler_seg = StandardScaler()
@@ -1043,11 +1043,11 @@ if uploaded_file is not None:
                 with col2:
                     st.metric("Silhouette Score", f"{silhouette:.3f}")
                 with col3:
-                    st.metric("Total Produk Dianalisis", len(df_agg))
+                    st.metric("Total Customer Dianalisis", len(df_agg))
 
                 # Grafik segmentasi
-                st.subheader("Grafik Segmentasi Produk")
-                st.caption(f"Sumbu X = Frekuensi penjualan produk | Sumbu Y = Total pendapatan dari kolom '{sales_col}'")
+                st.subheader("Grafik Segmentasi Pelanggan")
+                st.caption(f"Sumbu X = Frekuensi belanja customer | Sumbu Y = Total belanja dari kolom '{sales_col}'")
                 seg_colors = {
                     'Sultan / Loyal': '#e74c3c',
                     'Hemat': '#2ecc71',
@@ -1060,13 +1060,13 @@ if uploaded_file is not None:
                         continue
                     # Titik data individual - jelas dan solid
                     ax.scatter(subset['Frekuensi'], subset['Total_Belanja'],
-                               label=f"{seg} ({len(subset)} produk)",
+                               label=f"{seg} ({len(subset)} customer)",
                                color=color, alpha=1.0, s=200,
                                edgecolors='black', linewidth=1.5,
                                marker='o', zorder=5)
-                    # Label nama produk
+                    # Label nama customer
                     for _, row in subset.iterrows():
-                        ax.annotate(str(row[product_col])[:12],
+                        ax.annotate(str(row[customer_col])[:12],
                                     (row['Frekuensi'], row['Total_Belanja']),
                                     textcoords='offset points', xytext=(6, 6),
                                     fontsize=8, fontweight='bold', alpha=1.0)
@@ -1075,9 +1075,9 @@ if uploaded_file is not None:
                                color=color, s=800, edgecolors='black', linewidth=3,
                                zorder=10, marker='o', alpha=1.0)
 
-                ax.set_xlabel('Frekuensi Penjualan (Jumlah Transaksi)', fontsize=13, fontweight='bold')
-                ax.set_ylabel(f'Total Pendapatan ({sales_col})', fontsize=13, fontweight='bold')
-                ax.set_title('Segmentasi Produk: Frekuensi vs Total Pendapatan', fontsize=15, fontweight='bold')
+                ax.set_xlabel('Frekuensi Belanja (Jumlah Transaksi)', fontsize=13, fontweight='bold')
+                ax.set_ylabel(f'Total Belanja ({sales_col})', fontsize=13, fontweight='bold')
+                ax.set_title('Segmentasi Pelanggan: Loyalitas vs Total Belanja', fontsize=15, fontweight='bold')
                 ax.legend(loc='upper left', fontsize=11, framealpha=0.95)
                 ax.grid(True, alpha=0.3, linestyle='--')
                 ax.set_facecolor('#f8f9fa')
@@ -1104,30 +1104,29 @@ if uploaded_file is not None:
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     n_sultan = len(df_agg[df_agg['Segmen'] == 'Sultan / Loyal'])
-                    st.metric("Sultan / Loyal", f"{n_sultan} produk")
-                    st.caption("Sering terjual + pendapatan besar")
+                    st.metric("Sultan / Loyal", f"{n_sultan} customer")
+                    st.caption("Sering belanja + belanja besar")
                 with col2:
                     n_hemat = len(df_agg[df_agg['Segmen'] == 'Hemat'])
-                    st.metric("Hemat", f"{n_hemat} produk")
-                    st.caption("Sering terjual + pendapatan kecil")
+                    st.metric("Hemat", f"{n_hemat} customer")
+                    st.caption("Sering belanja + belanja kecil")
                 with col3:
                     n_pasif = len(df_agg[df_agg['Segmen'] == 'Baru / Pasif'])
-                    st.metric("Baru / Pasif", f"{n_pasif} produk")
-                    st.caption("Jarang terjual + pendapatan kecil")
+                    st.metric("Baru / Pasif", f"{n_pasif} customer")
+                    st.caption("Jarang belanja + belanja kecil")
 
-                # Tabel hasil per produk - diurutkan dari paling laris
-                st.subheader("Daftar Produk per Segmen")
-
-                df_prod_detail = df_agg[[product_col, 'Frekuensi', 'Total_Belanja', 'Segmen']].copy()
+                # Tabel hasil per customer
+                st.subheader("Daftar Customer per Segmen")
+                df_cust = df_agg[[customer_col, 'Frekuensi', 'Total_Belanja', 'Segmen']].copy()
                 segmen_order = {'Sultan / Loyal': 0, 'Hemat': 1, 'Baru / Pasif': 2}
-                df_prod_detail['_sort'] = df_prod_detail['Segmen'].map(segmen_order).fillna(3)
-                df_prod_detail = df_prod_detail.sort_values(['_sort', 'Total_Belanja'], ascending=[True, False])
-                df_prod_detail = df_prod_detail.drop(columns=['_sort'])
-                df_prod_detail['Total_Belanja_Fmt'] = df_prod_detail['Total_Belanja'].apply(
+                df_cust['_sort'] = df_cust['Segmen'].map(segmen_order).fillna(3)
+                df_cust = df_cust.sort_values(['_sort', 'Total_Belanja'], ascending=[True, False])
+                df_cust = df_cust.drop(columns=['_sort'])
+                df_cust['Total_Belanja_Fmt'] = df_cust['Total_Belanja'].apply(
                     lambda x: f"{x:,.0f}".replace(',', '.')
                 )
-                df_show = df_prod_detail[[product_col, 'Frekuensi', 'Total_Belanja_Fmt', 'Segmen']].copy()
-                df_show.columns = ['Nama Produk', 'Frekuensi Terjual', f'Total {sales_col}', 'Segmen']
+                df_show = df_cust[[customer_col, 'Frekuensi', 'Total_Belanja_Fmt', 'Segmen']].copy()
+                df_show.columns = ['Customer', 'Frekuensi Belanja', f'Total {sales_col}', 'Segmen']
                 st.dataframe(df_show, use_container_width=True, hide_index=True)
 
                 # Auto-save ke history
