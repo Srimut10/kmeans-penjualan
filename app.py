@@ -202,7 +202,16 @@ def plot_monthly_sales(df, date_col, sales_col, selected_year=None):
         
         # Extract bulan dan tahun
         df_plot['YearMonth'] = df_plot[date_col].dt.to_period('M')
-        df_plot['MonthName'] = df_plot[date_col].dt.strftime('%B %Y')
+        # Nama bulan Bahasa Indonesia
+        bulan_map = {
+            'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
+            'April': 'April', 'May': 'Mei', 'June': 'Juni',
+            'July': 'Juli', 'August': 'Agustus', 'September': 'September',
+            'October': 'Oktober', 'November': 'November', 'December': 'Desember'
+        }
+        df_plot['MonthName'] = df_plot[date_col].dt.strftime('%B %Y').apply(
+            lambda x: bulan_map.get(x.split()[0], x.split()[0]) + ' ' + x.split()[1]
+        )
         
         # Group by bulan - HITUNG JUMLAH TRANSAKSI (bukan total harga)
         monthly_count = df_plot.groupby(['YearMonth', 'MonthName']).size().reset_index(name='Jumlah_Terjual')
@@ -225,7 +234,7 @@ def plot_monthly_sales(df, date_col, sales_col, selected_year=None):
         for i, (bar, val) in enumerate(zip(bars, monthly_count['Jumlah_Terjual'].values)):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{int(val)} item',
+                    f'{int(val)} produk',
                     ha='center', va='bottom', fontsize=9, fontweight='bold')
         
         ax.set_xticks(x_pos)
@@ -233,13 +242,13 @@ def plot_monthly_sales(df, date_col, sales_col, selected_year=None):
         
         # Title berdasarkan filter
         if selected_year and selected_year != "Semua Tahun":
-            title = f'Jumlah Item Terjual per Bulan - Tahun {selected_year}'
+            title = f'Jumlah Produk Terjual per Bulan - Tahun {selected_year}'
         else:
-            title = 'Jumlah Item Terjual per Bulan - Semua Periode'
+            title = 'Jumlah Produk Terjual per Bulan - Semua Periode'
         
         ax.set_title(title, fontsize=15, fontweight='bold', pad=15)
         ax.set_xlabel('Bulan', fontsize=12, fontweight='bold')
-        ax.set_ylabel('Jumlah Item Terjual', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Jumlah Produk Terjual', fontsize=12, fontweight='bold')
         ax.grid(axis='y', alpha=0.3, linestyle='--')
         ax.set_facecolor('#f8f9fa')
         
@@ -1295,7 +1304,7 @@ if uploaded_file is not None:
                         top_month = monthly_count.idxmax()
                         top_count = monthly_count.max()
                         
-                        st.success(f"Bulan dengan penjualan tertinggi: **{top_month}** ({top_count} item terjual)")
+                        st.success(f"Bulan dengan penjualan tertinggi: **{top_month}** ({top_count} produk terjual)")
             else:
                 st.warning("""
                 Tidak ada kolom tanggal terdeteksi.
