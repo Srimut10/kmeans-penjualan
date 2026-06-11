@@ -165,8 +165,27 @@ def plot_monthly_sales(df, date_col, sales_col, selected_year=None):
     try:
         df_plot = df.copy()
         
-        # Konversi kolom tanggal
-        df_plot[date_col] = pd.to_datetime(df_plot[date_col], errors='coerce')
+        # Konversi tanggal - support format Indonesia (01 Januari 2026)
+        bulan_indo = {
+            'januari': 'January', 'februari': 'February', 'maret': 'March',
+            'april': 'April', 'mei': 'May', 'juni': 'June',
+            'juli': 'July', 'agustus': 'August', 'september': 'September',
+            'oktober': 'October', 'november': 'November', 'desember': 'December'
+        }
+        def parse_date(val):
+            s = str(val).strip().lower()
+            for indo, eng in bulan_indo.items():
+                s = s.replace(indo, eng)
+            try:
+                return pd.to_datetime(s, dayfirst=True)
+            except:
+                return pd.NaT
+
+        # Coba konversi biasa dulu, fallback ke format Indonesia
+        converted = pd.to_datetime(df_plot[date_col], errors='coerce')
+        if converted.isna().sum() > len(df_plot) * 0.5:
+            converted = df_plot[date_col].apply(parse_date)
+        df_plot[date_col] = converted
         df_plot = df_plot.dropna(subset=[date_col])
         
         if len(df_plot) == 0:
@@ -1201,23 +1220,43 @@ if uploaded_file is not None:
         
         else:
             # Grafik Penjualan per Bulan
-            # Cari kolom tanggal dengan deteksi lebih lengkap
+            # Fungsi konversi tanggal Indonesia
+            def convert_indo_date(series):
+                bulan_indo = {
+                    'januari': 'January', 'februari': 'February', 'maret': 'March',
+                    'april': 'April', 'mei': 'May', 'juni': 'June',
+                    'juli': 'July', 'agustus': 'August', 'september': 'September',
+                    'oktober': 'October', 'november': 'November', 'desember': 'December'
+                }
+                def parse_one(val):
+                    s = str(val).strip().lower()
+                    for indo, eng in bulan_indo.items():
+                        s = s.replace(indo, eng)
+                    try:
+                        return pd.to_datetime(s, dayfirst=True)
+                    except:
+                        return pd.NaT
+                return series.apply(parse_one)
+
+            # Cari kolom tanggal
             date_cols = []
             for col in df_cleaned.columns:
                 col_lower = col.lower()
-                # Tambah keyword deteksi yang lebih lengkap
                 date_keywords = [
                     'date', 'tanggal', 'waktu', 'time', 'created', 'order',
                     'dibuat', 'pesanan', 'transaksi', 'transaction', 'timestamp',
                     'tgl', 'datetime', 'bulan', 'tahun', 'month', 'year'
                 ]
-                
                 if any(keyword in col_lower for keyword in date_keywords):
-                    # Cek apakah kolom bisa dikonversi ke datetime
                     try:
+                        # Coba konversi biasa dulu
                         test_convert = pd.to_datetime(df_cleaned[col].head(10), errors='coerce')
-                        # Jika minimal 50% data bisa dikonversi, anggap kolom tanggal
-                        if test_convert.notna().sum() >= 5:
+                        if test_convert.notna().sum() >= 3:
+                            date_cols.append(col)
+                            continue
+                        # Coba konversi format Indonesia
+                        test_convert2 = convert_indo_date(df_cleaned[col].head(10))
+                        if test_convert2.notna().sum() >= 3:
                             date_cols.append(col)
                     except:
                         pass
