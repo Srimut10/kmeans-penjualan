@@ -739,21 +739,20 @@ st.sidebar.header("Pengaturan")
 uploaded_file = st.sidebar.file_uploader("Upload File CSV", type=['csv'])
 
 if uploaded_file is not None:
-    # Simpan file otomatis
+    # Simpan file otomatis ke lokal (fallback)
     try:
         import os
         if not os.path.exists('uploads'):
             os.makedirs('uploads')
-        
         file_path = os.path.join('uploads', uploaded_file.name)
         with open(file_path, 'wb') as f:
             f.write(uploaded_file.getbuffer())
     except Exception as e:
-        st.sidebar.error(f"Error menyimpan file: {e}")
-    
+        pass
+
     # Load data dengan auto-detect encoding
     df, detected_delimiter = load_data(uploaded_file)
-    
+
     if df is not None:
         # Debug: Tampilkan info kolom
         with st.expander("Info Kolom Dataset"):
