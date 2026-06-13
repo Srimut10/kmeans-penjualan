@@ -688,27 +688,73 @@ if menu == "History":
 elif menu == "Pengaturan":
     st.title("Pengaturan Akun")
     
-    st.subheader("Ubah Password")
-    with st.form("change_password_form"):
-        old_password = st.text_input("Password Lama", type="password")
-        new_password = st.text_input("Password Baru", type="password")
-        confirm_new_password = st.text_input("Konfirmasi Password Baru", type="password")
-        submit = st.form_submit_button("Ubah Password")
+    # Fitur ubah password - admin bisa pilih akun, user biasa hanya akun sendiri
+    if st.session_state.username == "admin":
+        st.subheader("Ubah Password Akun")
         
-        if submit:
-            if old_password and new_password and confirm_new_password:
-                if new_password == confirm_new_password:
-                    success, message = auth_manager.change_password(
-                        st.session_state.username, old_password, new_password
-                    )
-                    if success:
-                        st.success(message)
+        # Ambil daftar akun untuk dipilih
+        try:
+            import requests as _req2
+            SUPA_URL2 = "https://xaudrzfhhssvliozsxbo.supabase.co"
+            SUPA_KEY2 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhdWRyemZoaHNzdmxpb3pzeGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NTU0OTQsImV4cCI6MjA5NTMzMTQ5NH0.vyeu-_zq9Ue9SpRHfqMR491508T6a1e54LFjpcoQdik"
+            hdrs2 = {"apikey": SUPA_KEY2, "Authorization": f"Bearer {SUPA_KEY2}"}
+            res2 = _req2.get(f"{SUPA_URL2}/rest/v1/users", headers=hdrs2, params={"select": "username,name"})
+            all_users = res2.json()
+            user_options = [u["username"] for u in all_users]
+        except:
+            user_options = [st.session_state.username]
+
+        with st.form("change_password_form"):
+            target_user = st.selectbox("Pilih Akun", user_options)
+            new_password = st.text_input("Password Baru", type="password")
+            confirm_new_password = st.text_input("Konfirmasi Password Baru", type="password")
+            submit = st.form_submit_button("Ubah Password")
+
+            if submit:
+                if new_password and confirm_new_password:
+                    if new_password == confirm_new_password:
+                        # Update password langsung tanpa cek password lama (admin)
+                        try:
+                            import hashlib as _hl
+                            new_hash = _hl.sha256(new_password.encode()).hexdigest()
+                            res_upd = _req2.patch(
+                                f"{SUPA_URL2}/rest/v1/users",
+                                headers={**hdrs2, "Content-Type": "application/json"},
+                                params={"username": f"eq.{target_user}"},
+                                json={"password": new_hash, "password_plain": new_password}
+                            )
+                            if res_upd.status_code in [200, 204]:
+                                st.success(f"Password akun '{target_user}' berhasil diubah!")
+                            else:
+                                st.error("Gagal mengubah password")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
                     else:
-                        st.error(message)
+                        st.error("Password baru tidak cocok!")
                 else:
-                    st.error("Password baru tidak cocok!")
-            else:
-                st.warning("Lengkapi semua field!")
+                    st.warning("Lengkapi semua field!")
+    else:
+        st.subheader("Ubah Password")
+        with st.form("change_password_form"):
+            old_password = st.text_input("Password Lama", type="password")
+            new_password = st.text_input("Password Baru", type="password")
+            confirm_new_password = st.text_input("Konfirmasi Password Baru", type="password")
+            submit = st.form_submit_button("Ubah Password")
+            
+            if submit:
+                if old_password and new_password and confirm_new_password:
+                    if new_password == confirm_new_password:
+                        success, message = auth_manager.change_password(
+                            st.session_state.username, old_password, new_password
+                        )
+                        if success:
+                            st.success(message)
+                        else:
+                            st.error(message)
+                    else:
+                        st.error("Password baru tidak cocok!")
+                else:
+                    st.warning("Lengkapi semua field!")
 
     # Fitur tambah akun - khusus admin
     if st.session_state.username == "admin":
