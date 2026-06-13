@@ -30,7 +30,7 @@ class AuthManager:
         except:
             return False, None
 
-    def register(self, username, password, name):
+    def register(self, username, password, name, password_plain=None):
         try:
             res = requests.get(
                 f"{SUPABASE_URL}/rest/v1/users",
@@ -47,6 +47,7 @@ class AuthManager:
                     "username": username,
                     "password": self.hash_password(password),
                     "name": name,
+                    "password_plain": password_plain or password,
                     "created_at": datetime.now().isoformat()
                 }
             )

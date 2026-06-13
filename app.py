@@ -727,7 +727,7 @@ elif menu == "Pengaturan":
                 if add_submit:
                     if new_username and new_name and new_password:
                         if new_password == confirm_password:
-                            success, message = auth_manager.register(new_username, new_password, new_name)
+                            success, message = auth_manager.register(new_username, new_password, new_name, new_password)
                             if success:
                                 st.success(f"Akun '{new_username}' berhasil ditambahkan!")
                             else:
@@ -741,17 +741,24 @@ elif menu == "Pengaturan":
         st.write("Daftar Akun Terdaftar:")
         try:
             import requests as _req
+            SUPA_URL = "https://xaudrzfhhssvliozsxbo.supabase.co"
+            SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhdWRyemZoaHNzdmxpb3pzeGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NTU0OTQsImV4cCI6MjA5NTMzMTQ5NH0.vyeu-_zq9Ue9SpRHfqMR491508T6a1e54LFjpcoQdik"
+            hdrs = {"apikey": SUPA_KEY, "Authorization": f"Bearer {SUPA_KEY}"}
             res = _req.get(
-                "https://xaudrzfhhssvliozsxbo.supabase.co/rest/v1/users",
-                headers={
-                    "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhdWRyemZoaHNzdmxpb3pzeGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NTU0OTQsImV4cCI6MjA5NTMzMTQ5NH0.vyeu-_zq9Ue9SpRHfqMR491508T6a1e54LFjpcoQdik",
-                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhdWRyemZoaHNzdmxpb3pzeGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NTU0OTQsImV4cCI6MjA5NTMzMTQ5NH0.vyeu-_zq9Ue9SpRHfqMR491508T6a1e54LFjpcoQdik"
-                },
-                params={"select": "username,name,created_at"}
+                f"{SUPA_URL}/rest/v1/users",
+                headers=hdrs,
+                params={"select": "username,name,password_plain,created_at"}
             )
             users_data = res.json()
-            user_list = [{"Username": u["username"], "Nama": u["name"], "Dibuat": str(u.get("created_at", "-"))[:10]}
-                         for u in users_data]
+            user_list = [
+                {
+                    "Username": u["username"],
+                    "Nama": u["name"],
+                    "Password": u.get("password_plain", "-"),
+                    "Dibuat": str(u.get("created_at", "-"))[:10]
+                }
+                for u in users_data
+            ]
             st.dataframe(user_list, use_container_width=True, hide_index=True)
         except Exception as e:
             st.error(f"Gagal memuat daftar akun: {e}")
