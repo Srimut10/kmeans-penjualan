@@ -14,95 +14,105 @@ from history_manager import HistoryManager
 # Set page config harus di paling atas
 st.set_page_config(
     page_title="Analisis Clustering Penjualan",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
 # CSS Responsif untuk Mobile
 st.markdown("""
 <style>
-/* Mobile responsif */
-@media (max-width: 768px) {
-    /* Perkecil padding utama */
-    .main .block-container {
-        padding: 1rem 0.5rem !important;
-        max-width: 100% !important;
-    }
-    
-    /* Metric card lebih kecil */
-    [data-testid="metric-container"] {
-        padding: 0.5rem !important;
-    }
-    
-    /* Font lebih kecil di mobile */
-    h1 { font-size: 1.5rem !important; }
-    h2 { font-size: 1.3rem !important; }
-    h3 { font-size: 1.1rem !important; }
-    
-    /* Tabel scroll horizontal */
-    [data-testid="stDataFrame"] {
-        overflow-x: auto !important;
-    }
-    
-    /* Grafik full width */
-    [data-testid="stImage"] img {
-        width: 100% !important;
-        height: auto !important;
-    }
-    
-    /* Tombol full width */
+/* Reset dan base */
+* { box-sizing: border-box; }
+
+/* Container utama */
+.main .block-container {
+    padding: 1rem 1rem 2rem 1rem !important;
+    max-width: 100% !important;
+}
+
+/* Header lebih kecil di mobile */
+h1 {
+    font-size: clamp(1.2rem, 4vw, 2rem) !important;
+    line-height: 1.3 !important;
+    word-break: break-word;
+}
+h2 { font-size: clamp(1rem, 3.5vw, 1.6rem) !important; }
+h3 { font-size: clamp(0.9rem, 3vw, 1.3rem) !important; }
+
+/* Metric card responsif */
+[data-testid="metric-container"] {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 0.75rem !important;
+    text-align: center;
+}
+[data-testid="stMetricValue"] {
+    font-size: clamp(1rem, 4vw, 1.8rem) !important;
+}
+
+/* Tabel scroll horizontal */
+[data-testid="stDataFrame"] {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    border-radius: 8px;
+}
+
+/* Grafik responsif */
+[data-testid="stImage"], .stPlotlyChart, canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* Tombol full width di layar kecil */
+@media (max-width: 600px) {
     .stButton > button {
         width: 100% !important;
-        margin: 0.25rem 0 !important;
+        padding: 0.6rem !important;
+        font-size: 0.9rem !important;
     }
-    
-    /* Download button */
     .stDownloadButton > button {
         width: 100% !important;
     }
-    
-    /* Kolom jadi satu baris di mobile */
+    /* Metric 1 kolom */
     [data-testid="column"] {
+        width: 100% !important;
         min-width: 100% !important;
+        flex: 1 1 100% !important;
     }
-    
-    /* Sidebar lebih kecil */
-    [data-testid="stSidebar"] {
-        min-width: 80vw !important;
+    /* Sidebar full width */
+    [data-testid="stSidebar"] > div {
+        width: 85vw !important;
+        min-width: 85vw !important;
     }
-    
-    /* Form input full width */
-    .stTextInput input, .stSelectbox select {
+    /* Select dan input */
+    .stSelectbox, .stTextInput, .stSlider {
         width: 100% !important;
     }
-    
-    /* Radio button horizontal jadi vertikal */
-    .stRadio > div {
+    /* Expander */
+    .streamlit-expanderHeader {
+        font-size: 0.9rem !important;
+    }
+    /* Radio jadi vertikal */
+    .stRadio [role="radiogroup"] {
         flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    /* Kurangi padding */
+    .main .block-container {
+        padding: 0.5rem !important;
     }
 }
 
-/* Tampilan umum - semua device */
-[data-testid="metric-container"] {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1rem;
-}
-
+/* Alert/info box */
 .stAlert {
     border-radius: 8px;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
 }
 
-/* Header lebih rapi */
-h1, h2, h3 {
-    color: #1a1a2e;
-}
-
-/* Tabel responsif */
-[data-testid="stDataFrame"] {
-    border-radius: 8px;
-    overflow: hidden;
+/* Input fields */
+.stTextInput input {
+    font-size: 16px !important; /* Cegah zoom di iOS */
 }
 </style>
 """, unsafe_allow_html=True)
